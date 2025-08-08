@@ -8,7 +8,7 @@ CHECK_INTERVAL = 1  # seconds
 TRIGGER_DELAY = 10  # seconds
 
 questions = [
-    "poi vallom pani cheyy penne  ?",
+    "poi vallom pani cheyy penne ?",
     "Did you finish your work?",
     "Shouldn't you take a break?"
 ]
@@ -54,3 +54,4 @@ def monitor():
 
 if __name__ == "__main__":
     monitor()
+hi 
