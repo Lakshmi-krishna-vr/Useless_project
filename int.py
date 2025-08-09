@@ -8,53 +8,65 @@ import tkinter as tk
 TARGET_APP_KEYWORD = "YouTube"  # keyword to detect
 TRIGGER_DELAY = 10  # seconds
 CHECK_INTERVAL = 1  # seconds
-CARTOON_IMAGE_PATH = "C:\opencv\karik-removebg-preview.png"  # path to your cartoon image
+CARTOON_IMAGE_PATH = "C:\opencv\maman-removebg-preview.png"  # transparent PNG
 QUESTIONS = [
     "joli onum ayilee",
     "Hey! Are you sure you want to keep watching?",
     "Did you finish your work?",
     "How about a break?"
 ]
-# ====================== 
+# ======================
+
+screen_width, screen_height = pyautogui.size()
+image_width, image_height = 300, 300  # cartoon size
+
+# Predefined positions
+POSITIONS = [
+    (0, 0),
+    (screen_width - image_width, 0),
+    (0, screen_height - image_height),
+    (screen_width - image_width, screen_height - image_height)
+]
 
 def create_interrupt():
     # Pause video
     pyautogui.press('space')
 
-    # Screenshot current screen
-    screenshot = pyautogui.screenshot()
-
-    # Blur the screenshot
+    # Screenshot & blur
+    screenshot = pyautogui.screenshot().convert("RGB")
     blurred = screenshot.filter(ImageFilter.GaussianBlur(10))
 
-    # Load cartoon character image
+    # Load transparent PNG
     try:
         cartoon = Image.open(CARTOON_IMAGE_PATH).convert("RGBA")
-        cartoon = cartoon.resize((300, 300))  # Resize as needed
+        cartoon = cartoon.resize((image_width, image_height), Image.LANCZOS)
     except Exception as e:
         print(f"Error loading cartoon image: {e}")
         return
 
-    # Create Tkinter window
+    # Tkinter window
     root = tk.Tk()
     root.title("Interrupt")
     root.attributes('-fullscreen', True)
     root.attributes('-topmost', True)
 
-    # Convert blurred background to Tk image
-    bg_img = ImageTk.PhotoImage(blurred)
+    # Position tracking
+    position_index = 0
+    question_index = 0
 
-    # Background label
-    bg_label = tk.Label(root, image=bg_img)
+    # Merge cartoon onto blurred background (keeps transparency)
+    def merge_images():
+        merged = blurred.copy()
+        x, y = POSITIONS[position_index]
+        merged.paste(cartoon, (x, y), cartoon)  # mask=cartoon keeps transparency
+        return ImageTk.PhotoImage(merged)
+
+    # Initial background with cartoon
+    combined_img = merge_images()
+    bg_label = tk.Label(root, image=combined_img)
     bg_label.place(x=0, y=0, relwidth=1, relheight=1)
 
-    # Character label (left side)
-    cartoon_img = ImageTk.PhotoImage(cartoon)
-    char_label = tk.Label(root, image=cartoon_img, bg="#000000")
-    char_label.place(x=50, y=200)
-
-    # Question text
-    question_index = 0
+    # Question label
     question_label = tk.Label(
         root, text=QUESTIONS[question_index],
         fg="white", bg="black",
@@ -62,15 +74,20 @@ def create_interrupt():
     )
     question_label.place(x=400, y=250)
 
-    # Answer buttons
+    # Button handler
     def answer(_):
-        nonlocal question_index
+        nonlocal question_index, position_index, combined_img
         question_index += 1
         if question_index >= len(QUESTIONS):
             root.destroy()
         else:
             question_label.config(text=QUESTIONS[question_index])
+            position_index = (position_index + 1) % len(POSITIONS)
+            combined_img = merge_images()
+            bg_label.config(image=combined_img)
+            bg_label.image = combined_img  # prevent GC
 
+    # Buttons
     yes_btn = tk.Button(root, text="Yes", command=lambda: answer("Yes"), font=("Arial", 18))
     yes_btn.place(x=400, y=400)
 
@@ -89,4 +106,4 @@ def monitor():
         time.sleep(CHECK_INTERVAL)
 
 if __name__ == "__main__":
-    monitor() 
+    monitor()
