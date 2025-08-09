@@ -3,90 +3,180 @@ import pygetwindow as gw
 import pyautogui
 from PIL import Image, ImageTk, ImageFilter
 import tkinter as tk
+import webbrowser
 
 # ====== SETTINGS ======
-TARGET_APP_KEYWORD = "YouTube"  # keyword to detect
-TRIGGER_DELAY = 10  # seconds
-CHECK_INTERVAL = 1  # seconds
-CARTOON_IMAGE_PATH = "C:\opencv\karik-removebg-preview.png"  # path to your cartoon image
-QUESTIONS = [
-    "joli onum ayilee",
-    "Hey! Are you sure you want to keep watching?",
-    "Did you finish your work?",
-    "How about a break?"
+APPS = {
+    "youtube": {
+        "first": "മോനെ....YOUTUBE കാണു ആണോ ???",
+        "follow": "ഇതൊക്കെ കണ്ട് ഇരുന്ന മതിയോ "
+    },
+    "instagram": {
+        "first": "മോനെ....INSTA കാണു ആണോ ???",
+        "follow": "ഇതൊക്കെ കണ്ട് ഇരുന്ന മതിയോ "
+    },
+    "facebook": {
+        "first": "മോനെ....FACEBOOK കാണു ആണോ ???",
+        "follow": "ഇതൊക്കെ കണ്ട് ഇരുന്ന മതിയോ "
+    },
+    "geeksforgeeks": {
+        "first": "അപ്പൊ മോന് ഇരുന്നു പേടിച്ചോ മാമൻ പോട്ടേ !"
+    }
+}
+
+COMMON_QUESTIONS = [
+    "ജോലി ഒന്നും ആയിലെ??",
+    "മാമനോട് ഒന്നും തോന്നല്ലേ കേട്ടോ",
+    "SUPPLI ഒക്കെ എഴുതി എടുത്തോ?",
+    "പോയി പഠിച്ചുടെ??",
+    "ഇങ്ങനെ ഒക്കെ നടന്നാ മതിയോ?",
+    "വേറെ പണി ഒന്നും ഇല്ലേ ??",
+    "മാമനോട് ഒന്നും തോന്നല്ലേ കേട്ടോ",
+    "എന്നാ മാമൻ പോട്ടേ ??",
+    "അങ്ങനെ അങ് പോവാൻ പറ്റുവോ",
+    "മോൻ ഇതുവരെ പോയില്ലേ??",
+    "ബാ മാമൻ തന്നെ കൊണ്ട്  പോവാം"
 ]
-# ====================== 
 
-def create_interrupt():
-    # Pause video
-    pyautogui.press('space')
+TRIGGER_DELAY = 5  # seconds before showing interrupt
+CHECK_INTERVAL = 1  # seconds between checks
+CARTOON_IMAGE_PATH = r"C:\opencv\maman-removebg-preview.png"  # transparent PNG
+# ======================
 
-    # Screenshot current screen
-    screenshot = pyautogui.screenshot()
+# Get screen size
+screen_width, screen_height = pyautogui.size()
 
-    # Blur the screenshot
+# Base image size before scaling
+image_width, image_height = 300, 300
+
+# Predefined positions
+POSITIONS = [
+    (0, 0),
+    (screen_width - image_width, 0),
+    (0, screen_height - image_height),
+    (screen_width - image_width, screen_height - image_height)
+]
+
+
+def create_interrupt(app_key):
+    pyautogui.press('space')  # Pause video
+
+    # Screenshot & blur
+    screenshot = pyautogui.screenshot().convert("RGB")
     blurred = screenshot.filter(ImageFilter.GaussianBlur(10))
 
-    # Load cartoon character image
+    # Load transparent PNG
     try:
         cartoon = Image.open(CARTOON_IMAGE_PATH).convert("RGBA")
-        cartoon = cartoon.resize((300, 300))  # Resize as needed
     except Exception as e:
         print(f"Error loading cartoon image: {e}")
         return
 
-    # Create Tkinter window
+    # Scale image
+    scale_factor = 1.5
+    new_size = (int(image_width * scale_factor), int(image_height * scale_factor))
+    cartoon = cartoon.resize(new_size, Image.LANCZOS)
+
     root = tk.Tk()
     root.title("Interrupt")
     root.attributes('-fullscreen', True)
     root.attributes('-topmost', True)
 
-    # Convert blurred background to Tk image
-    bg_img = ImageTk.PhotoImage(blurred)
+    position_index = 0
+    stage = 0
 
-    # Background label
-    bg_label = tk.Label(root, image=bg_img)
+    questions = [APPS[app_key]["first"]]
+
+    def merge_images():
+        merged = blurred.copy()
+        x, y = POSITIONS[position_index]
+        merged.paste(cartoon, (x, y), cartoon)
+        return ImageTk.PhotoImage(merged)
+
+    combined_img = merge_images()
+    bg_label = tk.Label(root, image=combined_img)
     bg_label.place(x=0, y=0, relwidth=1, relheight=1)
 
-    # Character label (left side)
-    cartoon_img = ImageTk.PhotoImage(cartoon)
-    char_label = tk.Label(root, image=cartoon_img, bg="#000000")
-    char_label.place(x=50, y=200)
-
-    # Question text
-    question_index = 0
+    speech_frame = tk.Frame(root, bg="black", padx=10, pady=10)
     question_label = tk.Label(
-        root, text=QUESTIONS[question_index],
+        speech_frame,
+        text=questions[0],
         fg="white", bg="black",
-        font=("Arial", 24), wraplength=800, justify="left"
+        font=("Arial", 18),
+        wraplength=300,
+        justify="left"
     )
-    question_label.place(x=400, y=250)
+    question_label.pack()
 
-    # Answer buttons
-    def answer(_):
-        nonlocal question_index
-        question_index += 1
-        if question_index >= len(QUESTIONS):
-            root.destroy()
-        else:
-            question_label.config(text=QUESTIONS[question_index])
+    btn_frame = tk.Frame(speech_frame, bg="black")
+    btn_frame.pack(pady=5)
 
-    yes_btn = tk.Button(root, text="Yes", command=lambda: answer("Yes"), font=("Arial", 18))
-    yes_btn.place(x=400, y=400)
+    if app_key == "geeksforgeeks":
+        # Just one "OK" button
+        ok_btn = tk.Button(
+            btn_frame, text="OK", font=("Arial", 14),
+            command=root.destroy
+        )
+        ok_btn.pack(padx=5)
+    else:
+        def answer(ans):
+            nonlocal stage, combined_img, position_index, questions
+            if stage == 0:
+                if ans == "Yes":
+                    questions.append(APPS[app_key]["follow"])
+                else:
+                    questions.append("what else are you doing?")
+                questions.extend(COMMON_QUESTIONS)
+                stage += 1
+                question_label.config(text=questions[stage])
+            else:
+                stage += 1
+                if stage >= len(questions):
+                    webbrowser.open("https://www.geeksforgeeks.org")
+                    root.destroy()
+                    return
+                question_label.config(text=questions[stage])
 
-    no_btn = tk.Button(root, text="No", command=lambda: answer("No"), font=("Arial", 18))
-    no_btn.place(x=500, y=400)
+            position_index = (position_index + 1) % len(POSITIONS)
+            combined_img = merge_images()
+            bg_label.config(image=combined_img)
+            bg_label.image = combined_img
+            move_speech()
 
+        yes_btn = tk.Button(btn_frame, text="Yes", command=lambda: answer("Yes"), font=("Arial", 14))
+        yes_btn.pack(side="left", padx=5)
+
+        no_btn = tk.Button(btn_frame, text="No", command=lambda: answer("No"), font=("Arial", 14))
+        no_btn.pack(side="left", padx=5)
+
+    def move_speech():
+        x, y = POSITIONS[position_index]
+        speech_x = x + new_size[0] + 10 if x < screen_width // 2 else x - 320
+        speech_y = y
+        speech_frame.place(x=speech_x, y=speech_y)
+
+    move_speech()
     root.mainloop()
+
+shown_once = {key: False for key in APPS.keys()}
 
 def monitor():
     while True:
         active_window = gw.getActiveWindow()
-        if active_window and TARGET_APP_KEYWORD.lower() in active_window.title.lower():
-            print(f"Detected {TARGET_APP_KEYWORD}, waiting {TRIGGER_DELAY}s...")
-            time.sleep(TRIGGER_DELAY)
-            create_interrupt()
+        if active_window:
+            title = active_window.title.lower()
+            for app_key in APPS.keys():
+                if app_key in title:
+                    if app_key == "geeksforgeeks" and shown_once[app_key]:
+                        continue  # Skip if already shown
+                    print(f"Detected {app_key}, waiting {TRIGGER_DELAY}s...")
+                    time.sleep(TRIGGER_DELAY)
+                    create_interrupt(app_key)
+                    shown_once[app_key] = True
+                    break
         time.sleep(CHECK_INTERVAL)
 
+
 if __name__ == "__main__":
-    monitor() 
+    monitor()
+ 
