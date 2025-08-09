@@ -3,7 +3,7 @@ Stay focused—or face the wrath of Maaman!
 
 Well-Wisher Maaman is a Chrome extension designed to keep you away from distractions like social media like facebook,instagram and facebook.
 If you spend too much time scrolling say like 10min, an irritating uncle (Maaman) will suddenly appear on your screen.
-He will keep pestering you—chatting, scolding, and reminding you—until you finally decide to leave the distracting site and get back to work. its like you can't
+He will keep pestering you chatting, scolding, and reminding you until you finally decide to leave the distracting site and get back to work. its like you can't
 close this until you answer all the annoying question. Finally the uncle will redirect the screen to some useful site.
 
 -Features
