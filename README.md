@@ -7,6 +7,7 @@ He will keep pestering you—chatting, scolding, and reminding you—until you f
 close this until you answer all the annoying question. Finally at last if you are still using social media the uncle will redirect the screen to some useful site.
 
 -Features
+
 Real-time Distraction Detection – Automatically triggers when you spend too long on supported social media sites.
 Persistent Maaman Mode – Once he appears, he won’t leave until you close the site.
 Humorous but Annoying Dialogues – Keeps you amused but also slightly guilty for not studying or being productive.
