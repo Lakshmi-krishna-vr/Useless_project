@@ -15,7 +15,6 @@ Humorous but Annoying Dialogues – Keeps you amused but also slightly guilty.
 Customizable – You can adjust time limits and add/remove platforms.
 
 📷 Screenshots
+interupt screen of youtube
 <img width="1920" height="1200" alt="Screenshot 2025-08-09 175219" src="https://github.com/user-attachments/assets/c00ce50f-5670-4674-ac21-f0d14e3338e4" />
-![Uploading Screenshot 2025-08-09 175219.png…]()
-![Uploading image.png…]()
-![Uploading image.png…]()
+
