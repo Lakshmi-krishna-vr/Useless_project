@@ -35,7 +35,8 @@ No external server — everything runs locally.
 - **IDE:** VS Code  
 - **Version Control:** Git & GitHub  
 
-**Run**
+## Run
+
 python interupt.py
 
 ## Screenshots
